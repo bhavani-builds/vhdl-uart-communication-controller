@@ -23,12 +23,14 @@ architecture TB of uart_system_tb is
     signal rx_valid : std_logic;
     signal rx_busy  : std_logic;
 
+    signal parity_error : std_logic;
+
 begin
 
     -- Clock generation
     clk <= not clk after CLOCK_PERIOD / 2;
 
-    -- UART loopback connection
+    -- UART loopback
     rx <= tx;
 
 
@@ -52,23 +54,21 @@ begin
             rx       => rx,
             rx_data  => rx_data,
             rx_valid => rx_valid,
-            rx_busy  => rx_busy
+            rx_busy  => rx_busy,
+
+            parity_error => parity_error
         );
 
 
-    -- Test process
     process
     begin
 
         report "====================================";
-        report "       UART SYSTEM TEST";
+        report "      UART PARITY TEST";
         report "====================================";
 
 
-        -- =================================
-        -- RESET
-        -- =================================
-
+        -- Reset
         reset <= '1';
 
         wait for 200 ns;
@@ -79,10 +79,10 @@ begin
 
 
         -- =================================
-        -- TEST 1: SEND ASCII 'A'
+        -- TEST 1
         -- =================================
 
-        report "TEST 1: Transmitting 0x41";
+        report "TEST 1: Sending 0x41";
 
         tx_data  <= x"41";
         tx_start <= '1';
@@ -91,32 +91,27 @@ begin
 
         tx_start <= '0';
 
-
-        -- Wait for receiver
         wait until rx_valid = '1';
 
-
-        -- Verify received data
         assert rx_data = x"41"
-            report "TEST 1 FAILED: Expected 0x41"
+            report "TEST 1 FAILED: Incorrect received data"
             severity error;
 
+        assert parity_error = '0'
+            report "TEST 1 FAILED: Unexpected parity error"
+            severity error;
 
-        if rx_data = x"41" then
-
-            report "TEST 1 PASSED: Received 0x41"
-                severity note;
-
-        end if;
+        report "TEST 1 PASSED"
+            severity note;
 
 
         -- =================================
-        -- TEST 2: SEND ASCII 'Z'
+        -- TEST 2
         -- =================================
 
         wait for 1 ms;
 
-        report "TEST 2: Transmitting 0x5A";
+        report "TEST 2: Sending 0x5A";
 
         tx_data  <= x"5A";
         tx_start <= '1';
@@ -125,33 +120,27 @@ begin
 
         tx_start <= '0';
 
-
         wait until rx_valid = '1';
 
-
-        -- Verify received data
         assert rx_data = x"5A"
-            report "TEST 2 FAILED: Expected 0x5A"
+            report "TEST 2 FAILED: Incorrect received data"
             severity error;
 
+        assert parity_error = '0'
+            report "TEST 2 FAILED: Unexpected parity error"
+            severity error;
 
-        if rx_data = x"5A" then
-
-            report "TEST 2 PASSED: Received 0x5A"
-                severity note;
-
-        end if;
+        report "TEST 2 PASSED"
+            severity note;
 
 
         -- =================================
-        -- TEST COMPLETE
+        -- COMPLETE
         -- =================================
 
         report "====================================";
-        report "       ALL UART TESTS PASSED";
-        report "===================================="
-            severity note;
-
+        report "    UART PARITY TEST COMPLETED";
+        report "====================================";
 
         wait;
 
