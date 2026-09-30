@@ -10,6 +10,7 @@ on:
       - main
 
 jobs:
+
   simulation:
 
     runs-on: ubuntu-latest
@@ -27,6 +28,7 @@ jobs:
       - name: Analyze VHDL source files
         run: |
           ghdl -a --std=08 src/baud_generator.vhd
+          ghdl -a --std=08 src/parity_generator.vhd
           ghdl -a --std=08 src/uart_tx.vhd
           ghdl -a --std=08 src/uart_rx.vhd
           ghdl -a --std=08 src/uart_controller.vhd
@@ -41,4 +43,9 @@ jobs:
 
       - name: Run UART simulation
         run: |
-          ghdl -r --std=08 uart_system_tb
+          ghdl -r --std=08 uart_system_tb \
+            --wave=uart_waveform.ghw
+
+      - name: Show generated waveform
+        run: |
+          ls -lh uart_waveform.ghw
