@@ -1,0 +1,44 @@
+name: VHDL UART Verification
+
+on:
+  push:
+    branches:
+      - main
+
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  simulation:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install GHDL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ghdl
+
+      - name: Analyze VHDL source files
+        run: |
+          ghdl -a --std=08 src/baud_generator.vhd
+          ghdl -a --std=08 src/uart_tx.vhd
+          ghdl -a --std=08 src/uart_rx.vhd
+          ghdl -a --std=08 src/uart_controller.vhd
+
+      - name: Analyze testbench
+        run: |
+          ghdl -a --std=08 tb/uart_system_tb.vhd
+
+      - name: Elaborate testbench
+        run: |
+          ghdl -e --std=08 uart_system_tb
+
+      - name: Run UART simulation
+        run: |
+          ghdl -r --std=08 uart_system_tb
